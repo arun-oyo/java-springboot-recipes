@@ -185,3 +185,8 @@ echo "Replaced deprecated new Double() constructors with Double.valueOf()"
 echo "Changing repository saveAll calls"
 sh "$SCRIPT_DIR/repositorysavemigration.sh"
 echo "Changed repository saveAll calls"
+
+# Kafka ListenableFuture to CompletableFuture migration
+echo "Changing Kafka ListenableFuture to CompletableFuture"
+sh "$SCRIPT_DIR/kafkacallbackmigration.sh"
+echo "Changed Kafka ListenableFuture to CompletableFuture"
