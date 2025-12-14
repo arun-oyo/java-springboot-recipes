@@ -1,0 +1,152 @@
+### Take reference from this pull request during migration: https://github.com/oyorooms/Hades/pull/1256/files#diff-53e0fee6660a4a2a0f74370f5a08f37733746fd612eca8c9df7ebd0dfdb613ef ##
+
+0: brew install grep
+
+0.1 Go to the project directory and run:
+    put the scripts in home directory. Provide execute permission and run
+    sh /path_to_script/migratejava8to21.sh
+
+1. new Double() is deprecated - So remove it.
+
+2. spring data jpa - function save(list) is deprecated -> change it to saveAll(list)
+
+3. Hystrix command changes - annotation and configuration
+
+3.1 Migrate context propagator from Hystrix to Resilience4j: Below is an snippet
+'''
+public class ResilienceContextPropagator implements ContextPropagator<ResilienceContextPropagator.BulkheadContextHolder> {
+
+    @Data
+    @Builder
+    public static class BulkheadContextHolder {
+        Set<String> servicesWithFallback;
+        List<String> transactionName;
+        Boolean enableDebugLogs;
+        ImmutableMap<String, String> requestHeaders;
+        List<Tag> micrometerMetricsTags;
+        Map<String, String> mdcContext;
+    }
+
+    @Override
+    public Supplier<Optional<BulkheadContextHolder>> retrieve() {
+        BulkheadContextHolder context = BulkheadContextHolder.builder()
+                .mdcContext(MDC.getCopyOfContextMap())
+                .servicesWithFallback(ThreadLocalUtils.getServicesWithFallback())
+                .transactionName(ThreadLocalUtils.getTransactionName())
+                .enableDebugLogs(ThreadLocalUtils.getEnableDebugLogs())
+                .requestHeaders(ThreadLocalUtils.getRequestHeaders())
+                .micrometerMetricsTags(ThreadLocalUtils.getMicrometerMetricsTags())
+                .build();
+        return () -> Optional.of(context);
+    }
+
+    @Override
+    public Consumer<Optional<BulkheadContextHolder>> copy() {
+        return contextMap -> contextMap.ifPresent(context -> {
+            ThreadLocalUtils.setServicesWithFallback(context.getServicesWithFallback());
+            ThreadLocalUtils.setTransactionName(context.getTransactionName());
+            ThreadLocalUtils.setEnableDebugLogs(context.getEnableDebugLogs());
+            ThreadLocalUtils.setRequestHeaders(context.getRequestHeaders());
+            ThreadLocalUtils.setMicrometerMetricsTags(context.getMicrometerMetricsTags());
+            MDC.setContextMap(context.getMdcContext());
+        });
+    }
+
+    @Override
+    public Consumer<Optional<BulkheadContextHolder>> clear() {
+        return contextMap -> {
+            ThreadLocalUtils.remove();
+            MDC.clear();
+        };
+    }
+}
+'''
+
+# and add this to properties file:
+resilience4j.thread-pool-bulkhead.configs.default.contextPropagators={classpath}.ResilienceContextPropagator
+
+
+4. Remove the newrelic from java executable command and dockerfile.
+
+5. RestTemplate configuration changes:
+'''
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    connectionManager.setDefaultMaxPerRoute(poolCount);
+    connectionManager.setMaxTotal(poolCount);
+
+    CloseableHttpClient httpClient = HttpClients.custom()
+            .setConnectionManager(connectionManager)
+            .setDefaultRequestConfig(RequestConfig.custom()
+                    .setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+                    .setResponseTimeout(readTimeout, TimeUnit.MILLISECONDS)
+                    .build())
+            .build();
+
+    HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
+    requestFactory.setConnectTimeout(connectTimeout);
+    requestFactory.setConnectionRequestTimeout(connectionTimeout);
+'''
+
+
+6. Mongo Config changes:
+
+    # Change MongoDbFactory -> MongoDatabaseFactory
+    # MongoClient class path has been changed. So remove the existing imports.
+
+'''
+    List<ServerAddress> servers = new ArrayList<>();
+    for (String serverUrl : databaseURL.split(",")) {
+        servers.add(new ServerAddress(serverUrl));
+    }
+
+    MongoClientSettings.Builder builder = MongoClientSettings.builder()
+            .uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
+            .applyToClusterSettings(clusterBuilder -> clusterBuilder.hosts(servers))
+            .readPreference(com.mongodb.ReadPreference.valueOf(readPref))
+            .applyToConnectionPoolSettings(poolBuilder -> poolBuilder
+                    .minSize(minDbConnections)
+                    .maxSize(maxDbConnections));
+
+    if (StringUtils.isNotBlank(mongoUser)) {
+        MongoCredential credential = MongoCredential.createScramSha1Credential(mongoUser, authDb, mongoPass.toCharArray());
+        builder.credential(credential);
+    }
+
+    return MongoClients.create(builder.build());
+'''
+
+7. Kafka producer callback changes:
+
+Earlier: 
+    ListenableFuture<SendResult<Object, Object>> publishFuture = kafkaTemplate.send(topic, message);
+    publishFuture.addCallback(new ListenableFutureCallback<SendResult<Object, Object>>() {
+
+        @Override
+        public void onSuccess(SendResult<Object, Object> result) {
+            logger.info("{} Successfully published to kafka offset: {} in topic: {} and message: {}", logTag,
+                    result.getRecordMetadata().offset(), topic, message);
+        }
+
+        @Override
+        public void onFailure(Throwable ex) {
+            logger.error("{} Failed in  publishing to kafka with exception: {} in topic: {} for message: {}",
+                    logTag, ex.getMessage(), topic, message);
+        }
+    });
+
+Upgraded:
+    CompletableFuture<SendResult<Object, Object>> publishFuture =
+                    kafkaTemplate.send(topic, message);
+
+    publishFuture.whenComplete((result, ex) -> {
+
+        if (ex == null) {
+            logger.info("{} Successfully published to kafka offset: {} in topic: {} and message: {}", logTag,
+                    result.getRecordMetadata().offset(), topic, message);
+        } else {
+            logger.error("{} Failed in publishing to kafka with exception: {} in topic: {} for message: {}",
+                    logTag, ex.getMessage(), topic, message, ex);
+
+        }
+    });
+
