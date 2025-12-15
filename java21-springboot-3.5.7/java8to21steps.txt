@@ -174,3 +174,5 @@ Upgraded:
         return new JdbcTemplate(hiveDataSource);
     }
 '''
+
+9. Update HttpStatus arg to HttpStatusCode for overridden method in extended class ResponseEntityExceptionHandler
