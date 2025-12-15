@@ -173,6 +173,10 @@ grep -rl "import io.swagger.models.auth" "$CLASS_PATH" | while read -r file; do
     sed -i '' '/import io.swagger.models.auth/d' $file
 done
 
+grep -rl "import org.apache.tomcat.jni.Local" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' '/import org.apache.tomcat.jni.Local/d' $file
+done
+
 # Deprecated Double constructor migration (Java 21)
 echo "Replacing deprecated new Double() constructors"
 grep -rl "new Double(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
@@ -181,12 +185,6 @@ grep -rl "new Double(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
 done
 echo "Replaced deprecated new Double() constructors with Double.valueOf()"
 
-# repository saveAll migration
-echo "Changing repository saveAll calls"
-sh "$SCRIPT_DIR/repositorysavemigration.sh"
-echo "Changed repository saveAll calls"
-
-# Kafka ListenableFuture to CompletableFuture migration
-echo "Changing Kafka ListenableFuture to CompletableFuture"
-sh "$SCRIPT_DIR/kafkacallbackmigration.sh"
-echo "Changed Kafka ListenableFuture to CompletableFuture"
+grep -rl "import io.micrometer.prometheus.PrometheusMeterRegistry" "$CLASS_PATH" | while read -r file; do
+    sed -i '' 's/import springfox.documentation/import io.micrometer.prometheusmetrics.PrometheusMeterRegistry/g' $file
+done

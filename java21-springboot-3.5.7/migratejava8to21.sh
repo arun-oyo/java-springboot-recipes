@@ -41,3 +41,9 @@ sh "$SCRIPT_DIR/junit4to5migration.sh"
 echo "JUnit tests migrated to JUnit 5"
 ################################## JUnit 4 to 5 migration end ###########################
 
+
+################################## Repository SaveAll Method Migration ###########################
+echo "Changing repository saveAll calls"
+sh "$SCRIPT_DIR/repositorysavemigration.sh"
+echo "Changed repository saveAll calls"
+################################## Repository SaveAll Method Migration End ###########################
