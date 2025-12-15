@@ -50,6 +50,27 @@ find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
   sed -i '' 's/javax.persistence.query.timeout/jakarta.persistence.query.timeout/g' "$file"
 done
 
+# MongoDB UUID representation property
+echo "Checking for MongoDB properties and adding UUID representation..."
+find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
+  # Check if file has any spring.data.mongodb properties
+  if grep -q "^spring\.data\.mongodb\." "$file"; then
+    echo "Found MongoDB properties in: $(basename "$file")"
+    
+    # Check if uuid-representation property already exists
+    if ! grep -q "spring\.data\.mongodb\.uuid-representation" "$file"; then
+      echo "Adding spring.data.mongodb.uuid-representation=java_legacy to: $(basename "$file")"
+      
+      # Add the property (without removing existing)
+      if [[ -n $(tail -c1 "$file") ]]; then
+        echo "" >> "$file"
+      fi
+      echo "spring.data.mongodb.uuid-representation=java_legacy" >> "$file"
+    else
+      echo "UUID representation property already exists in: $(basename "$file")"
+    fi
+  fi
+done
 
 # add throttler properties for resilience4j
 # find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
