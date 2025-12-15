@@ -2,7 +2,7 @@
 
 # Define versions to update to
 JAVA_VERSION=21
-SPRING_BOOT_VERSION=3.1.11
+SPRING_BOOT_VERSION=3.5.7
 CLASS_PATH="./src/main/java"
 PROPERTIES_PATH="./src/main/resources"
 TEST_PATH="./src/test/java"
@@ -25,10 +25,44 @@ find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' 's/import org\.springfr
 find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' 's/import org\.mockito\.junit\.MockitoJUnitRunner;/import org.mockito.junit.jupiter.MockitoExtension;/g' {} +
 find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' 's/import org\.mockito\.runners\.MockitoJUnitRunner;/import org.mockito.junit.jupiter.MockitoExtension;/g' {} +
 
-# Remove JUnit 3 TestCase
-echo "Removing JUnit 3 TestCase..."
+# Remove JUnit 3 TestCase and transform static imports
+echo "Transforming JUnit 3 TestCase imports and static imports..."
 find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' '/import junit\.framework\.TestCase;/d' {} +
 find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' 's/\(class [A-Za-z0-9_]*\) extends TestCase/\1/g' {} +
+
+# Transform JUnit 3 TestCase static imports to JUnit 5
+find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
+    -e 's/import static junit\.framework\.TestCase\.assertEquals;/import static org.junit.jupiter.api.Assertions.assertEquals;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertNotEquals;/import static org.junit.jupiter.api.Assertions.assertNotEquals;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertTrue;/import static org.junit.jupiter.api.Assertions.assertTrue;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertFalse;/import static org.junit.jupiter.api.Assertions.assertFalse;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertNull;/import static org.junit.jupiter.api.Assertions.assertNull;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertNotNull;/import static org.junit.jupiter.api.Assertions.assertNotNull;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertSame;/import static org.junit.jupiter.api.Assertions.assertSame;/g' \
+    -e 's/import static junit\.framework\.TestCase\.assertNotSame;/import static org.junit.jupiter.api.Assertions.assertNotSame;/g' \
+    -e 's/import static junit\.framework\.TestCase\.fail;/import static org.junit.jupiter.api.Assertions.fail;/g' \
+    {} +
+
+# Transform JUnit 3 Assert static imports to JUnit 5
+find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
+    -e 's/import static junit\.framework\.Assert\.assertEquals;/import static org.junit.jupiter.api.Assertions.assertEquals;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertNotEquals;/import static org.junit.jupiter.api.Assertions.assertNotEquals;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertTrue;/import static org.junit.jupiter.api.Assertions.assertTrue;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertFalse;/import static org.junit.jupiter.api.Assertions.assertFalse;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertNull;/import static org.junit.jupiter.api.Assertions.assertNull;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertNotNull;/import static org.junit.jupiter.api.Assertions.assertNotNull;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertSame;/import static org.junit.jupiter.api.Assertions.assertSame;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertNotSame;/import static org.junit.jupiter.api.Assertions.assertNotSame;/g' \
+    -e 's/import static junit\.framework\.Assert\.fail;/import static org.junit.jupiter.api.Assertions.fail;/g' \
+    -e 's/import static junit\.framework\.Assert\.assertArrayEquals;/import static org.junit.jupiter.api.Assertions.assertArrayEquals;/g' \
+    {} +
+
+# Remove any remaining JUnit 3 framework imports
+find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' '/import junit\.framework\.Assert;/d' {} +
+
+# Handle JUnit 3 suite() method removal (rarely needed in modern testing)
+find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' '/public static Test suite()/d' {} +
+find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' '/public static junit\.framework\.Test suite()/d' {} +
 
 # Replace deprecated Mockito matchers with nullable() for null-safety FIRST
 echo "Replacing deprecated Mockito matchers with nullable() equivalents..."

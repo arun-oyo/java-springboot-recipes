@@ -115,9 +115,10 @@ resilience4j.thread-pool-bulkhead.configs.default.contextPropagators={classpath}
     return MongoClients.create(builder.build());
 '''
 
-7. Kafka producer callback changes:
+7. Kafka producer callback changes should get changed to:
 
 Earlier: 
+'''
     ListenableFuture<SendResult<Object, Object>> publishFuture = kafkaTemplate.send(topic, message);
     publishFuture.addCallback(new ListenableFutureCallback<SendResult<Object, Object>>() {
 
@@ -133,8 +134,10 @@ Earlier:
                     logTag, ex.getMessage(), topic, message);
         }
     });
+'''
 
 Upgraded:
+'''
     CompletableFuture<SendResult<Object, Object>> publishFuture =
                     kafkaTemplate.send(topic, message);
 
@@ -149,4 +152,25 @@ Upgraded:
 
         }
     });
+''''
 
+8. Hive JDBC connection pooling client:
+'''
+    @Bean(name = "hiveDataSource")
+    public DataSource hiveDataSource() {
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(hiveUrl);
+        dataSource.setDriverClassName(hiveDriverClassName);
+        dataSource.setUsername(hiveUserName);
+        dataSource.setPoolName("HiveHikariPool");
+        dataSource.setMaximumPoolSize(10);
+        dataSource.setMinimumIdle(2);
+        dataSource.setConnectionTimeout(30000);
+        return dataSource;
+    }
+
+    @Bean(name = "hiveJdbcTemplate")
+    public JdbcTemplate hiveJdbcTemplate(@Qualifier("hiveDataSource") DataSource hiveDataSource) {
+        return new JdbcTemplate(hiveDataSource);
+    }
+'''

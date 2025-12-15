@@ -353,9 +353,8 @@ echo "Processing $pom_file..."
 # httpclient changes
     if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='org.apache.httpcomponents' and x:artifactId='httpclient']" "$pom_file" >/dev/null; then
         delete_dependency "pom.xml" "$ns" "org.apache.httpcomponents" "httpclient"
-        update_version_or_add_dependency "pom.xml" "$ns" "org.apache.httpcomponents.client5" "httpclient5" "5.1.3"
+        update_version_or_add_dependency "pom.xml" "$ns" "org.apache.httpcomponents.client5" "httpclient5" "5.4.1"
     fi
-
 
 # elastic apm changes
     update_version "pom.xml" "$ns" "co.elastic.apm" "apm-agent-api" "1.49.0"
@@ -426,6 +425,9 @@ echo "Processing $pom_file..."
 
     update_artifact "pom.xml" "$ns" "org.hibernate" "hibernate-validator" "org.hibernate.validator" "hibernate-validator"
     delete_version "pom.xml" "$ns" "org.hibernate.validator" "hibernate-validator"
+
+# postgresql changes
+    delete_version "pom.xml" "$ns" "org.postgresql" "postgresql"
 
 # javax activation changes
     update_artifact "pom.xml" "$ns" "javax.activation" "activation" "jakarta.activation" "jakarta.activation-api"
