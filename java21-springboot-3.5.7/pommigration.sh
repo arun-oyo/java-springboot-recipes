@@ -353,7 +353,7 @@ echo "Processing $pom_file..."
 # httpclient changes
     if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='org.apache.httpcomponents' and x:artifactId='httpclient']" "$pom_file" >/dev/null; then
         delete_dependency "pom.xml" "$ns" "org.apache.httpcomponents" "httpclient"
-        update_version_or_add_dependency "pom.xml" "$ns" "org.apache.httpcomponents.client5" "httpclient5" "5.4.1"
+        update_version_or_add_dependency "pom.xml" "$ns" "org.apache.httpcomponents.client5" "httpclient5" "5.4.4"
     fi
 
 # elastic apm changes
