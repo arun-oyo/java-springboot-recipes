@@ -185,6 +185,63 @@ grep -rl "new Double(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
 done
 echo "Replaced deprecated new Double() constructors with Double.valueOf()"
 
+# Deprecated Float constructor migration (Java 21)
+echo "Replacing deprecated new Float() constructors"
+grep -rl "new Float(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Float(/Float.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Float() constructors with Float.valueOf()"
+
+# Deprecated Long constructor migration (Java 21)
+echo "Replacing deprecated new Long() constructors"
+grep -rl "new Long(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Long(/Long.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Long() constructors with Long.valueOf()"
+
+# Deprecated Integer constructor migration (Java 21)
+echo "Replacing deprecated new Integer() constructors"
+grep -rl "new Integer(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Integer(/Integer.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Integer() constructors with Integer.valueOf()"
+
+# Deprecated Short constructor migration (Java 21)
+echo "Replacing deprecated new Short() constructors"
+grep -rl "new Short(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Short(/Short.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Short() constructors with Short.valueOf()"
+
+# Deprecated Byte constructor migration (Java 21)
+echo "Replacing deprecated new Byte() constructors"
+grep -rl "new Byte(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Byte(/Byte.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Byte() constructors with Byte.valueOf()"
+
+# Deprecated Character constructor migration (Java 21)
+echo "Replacing deprecated new Character() constructors"
+grep -rl "new Character(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Character(/Character.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Character() constructors with Character.valueOf()"
+
+# Deprecated Boolean constructor migration (Java 21)
+echo "Replacing deprecated new Boolean() constructors"
+grep -rl "new Boolean(" "$CLASS_PATH" "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/new Boolean(/Boolean.valueOf(/g' "$file"
+    echo "Processed file: $file"
+done
+echo "Replaced deprecated new Boolean() constructors with Boolean.valueOf()"
+
+
 grep -rl "import io.micrometer.prometheus.PrometheusMeterRegistry" "$CLASS_PATH" | while read -r file; do
     sed -i '' 's/import springfox.documentation/import io.micrometer.prometheusmetrics.PrometheusMeterRegistry/g' $file
 done

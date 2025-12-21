@@ -157,6 +157,41 @@ echo "Processing $pom_file..."
             -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration" -t elem -n "target" -v "21" \
             "$pom_file"
 
+        # Add annotation processor paths if hibernate-jpamodelgen is present in dependencies
+        if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:artifactId='hibernate-jpamodelgen']" "$pom_file" >/dev/null; then
+            echo "Adding annotation processor paths for hibernate-jpamodelgen..."
+            
+            # Add annotationProcessorPaths element
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration" -t elem -n "annotationProcessorPaths" -v "" \
+                "$pom_file"
+            
+            # Add lombok path
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths" -t elem -n "path" -v "" \
+                "$pom_file"
+            
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "groupId" -v "org.projectlombok" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "artifactId" -v "lombok" \
+                "$pom_file"
+            
+            # Add hibernate-jpamodelgen path
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths" -t elem -n "path" -v "" \
+                "$pom_file"
+            
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "groupId" -v "org.hibernate.orm" \
+                -s "//x:project/x:build/x:plugins/x:plugin[last()]/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "artifactId" -v "hibernate-jpamodelgen" \
+                "$pom_file"
+        fi
+
 
     else
         # Update source and target if maven-compiler-plugin exists
@@ -165,6 +200,44 @@ echo "Processing $pom_file..."
             -u "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:source" -v "$JAVA_VERSION" \
             -u "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:target" -v "$JAVA_VERSION" \
             "$pom_file"
+    fi
+
+    # Add annotation processor paths if hibernate-jpamodelgen is present in dependencies
+    if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:artifactId='hibernate-jpamodelgen']" "$pom_file" >/dev/null; then
+        # Check if annotationProcessorPaths already exists
+        if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths" "$pom_file" >/dev/null; then
+            echo "Adding annotation processor paths for hibernate-jpamodelgen..."
+            
+            # Add annotationProcessorPaths element
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration" -t elem -n "annotationProcessorPaths" -v "" \
+                "$pom_file"
+            
+            # Add lombok path
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths" -t elem -n "path" -v "" \
+                "$pom_file"
+            
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "groupId" -v "org.projectlombok" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "artifactId" -v "lombok" \
+                "$pom_file"
+            
+            # Add hibernate-jpamodelgen path
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths" -t elem -n "path" -v "" \
+                "$pom_file"
+            
+            xmlstarlet ed --inplace \
+                -N x="$ns" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "groupId" -v "org.hibernate.orm" \
+                -s "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-compiler-plugin']/x:configuration/x:annotationProcessorPaths/x:path[last()]" -t elem -n "artifactId" -v "hibernate-jpamodelgen" \
+                "$pom_file"
+        fi
     fi
 
     if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:build/x:plugins/x:plugin[x:artifactId='avro-maven-plugin']" "$pom_file" >/dev/null; then

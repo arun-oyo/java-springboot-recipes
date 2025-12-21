@@ -250,7 +250,7 @@ for repo in $repo_classes; do
     echo "Processing repository: $repo"
     
     # Find files that reference this repository (excluding the repository interface file)
-    usage_files=$(find "$CLASS_PATH" "$TEST_PATH" -name "*.java" -type f -exec grep -l "$repo" {} \; 2>/dev/null | grep -v "/$repo\.java$")
+    usage_files=$(grep -rl "$repo" "$CLASS_PATH" "$TEST_PATH" --include="*.java" 2>/dev/null | grep -v "/$repo\.java$")
     
     for file in $usage_files; do
         # Skip if already processed
