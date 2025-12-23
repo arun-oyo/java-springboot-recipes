@@ -509,6 +509,7 @@ echo "Processing $pom_file..."
 
 # spring-test changes
     update_version "pom.xml" "$ns" "org.springframework" "spring-test" "6.1.6"
+    delete_version "pom.xml" "$ns" "org.assertj" "assertj-core"
 
 # Remove versions from all org.springframework.* dependencies (managed by Spring Boot BOM)
     echo "Removing versions from org.springframework.* dependencies..."

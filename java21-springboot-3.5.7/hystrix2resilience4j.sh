@@ -109,9 +109,9 @@ update_mockito_returns() {
     local ffile="$1"
     local function_name="$2"
     
-    echo "Updating Mockito thenReturn for function: $function_name in test file: $ffile"
+    echo "Updating Mockito thenReturn and doReturn for function: $function_name in test file: $ffile"
     
-    # Find lines with thenReturn for this function
+    # Handle thenReturn pattern: when(...).thenReturn(value)
     grep -n "thenReturn(" "$ffile" | while read -r return_line; do
         line_num=$(echo "$return_line" | cut -d: -f1)
         line_content=$(echo "$return_line" | cut -d: -f2-)
@@ -140,6 +140,37 @@ update_mockito_returns() {
             fi
         fi
     done
+    
+    # Handle doReturn pattern: doReturn(value).when(...).method()
+    grep -n "doReturn(" "$ffile" | while read -r return_line; do
+        line_num=$(echo "$return_line" | cut -d: -f1)
+        line_content=$(echo "$return_line" | cut -d: -f2-)
+        
+        # Check if this line is related to our function by looking for when() call after it
+        context_end=$((line_num + 5))
+        total_lines=$(wc -l < "$ffile")
+        if [ $context_end -gt $total_lines ]; then
+            context_end=$total_lines
+        fi
+        
+        # Look for when() call with our function in the next few lines
+        when_found=$(sed -n "${line_num},${context_end}p" "$ffile" | grep -c "when.*${function_name}(")
+        
+        if [ "$when_found" -gt 0 ]; then
+            echo "    Found doReturn at line $line_num for function $function_name"
+            
+            # Extract the return value from doReturn(value)
+            return_value=$(echo "$line_content" | sed -E 's/.*doReturn\(([^)]*)\).*/\1/')
+            
+            # Skip if already wrapped in CompletableFuture
+            if [[ "$return_value" != *"CompletableFuture"* ]]; then
+                # Replace doReturn(value) with doReturn(CompletableFuture.completedFuture(value))
+                sed -i '' "${line_num}s/doReturn(${return_value})/doReturn(CompletableFuture.completedFuture(${return_value}))/" "$ffile"
+                echo "    Updated doReturn at line $line_num: wrapped '$return_value' with CompletableFuture.completedFuture()"
+				insert_line_if_not_exists "3" "import java.util.concurrent.CompletableFuture;" "$ffile"
+            fi
+        fi
+    done
 }
 
 update_caller_util() {
@@ -147,6 +178,8 @@ update_caller_util() {
 	local ffile=$2
 	local function_name=$3
 	local formal_num_arguments=$4
+
+	echo "Updating caller at line $line_number in file: $ffile"
 
 	caller=$(awk "NR >= $line_number" "$ffile" | awk -v func_name="$function_name" '
 	    BEGIN { call = ""; parens = 0; target_found = 0; caller_def = ""}
@@ -258,7 +291,7 @@ update_caller() {
 	local function_name=$3
 	local formal_num_arguments=$4
 
-	echo "Processing caller in: $ffile"
+	echo "Updating callers in file: $ffile for variable: $target_var_name and function: $function_name"
 
 	awk -v target_var="$target_var_name" -v func_name="$function_name" '
 	{
@@ -270,12 +303,13 @@ update_caller() {
         }
 	}
 	' "$ffile" | while read -r line_number; do
-		#echo "updating new line caller ---------- $line_number"
+		echo "Updating caller at line $line_number in file: $ffile"
 		update_caller_util "$line_number" "$ffile" "$function_name" "$formal_num_arguments"
 	done
 
-
+	echo "Checking for direct calls to $target_var_name $function_name in file: $ffile"
     grep -n "$target_var_name\.$function_name(" "$ffile" | cut -d: -f1 | while read -r line_number; do
+		echo "Updating direct caller at line $line_number in file: $ffile with formal arguments: $formal_num_arguments"
 		update_caller_util "$line_number" "$ffile" "$function_name" "$formal_num_arguments"
 	done
 }
@@ -339,7 +373,14 @@ update_callers() {
 		if [[ "$(basename "$target_file")" == "$(basename "$ffile")" ]] ; then
 			echo "In the same file: $ffile"
 		fi
-		target_var_name=$(grep -E ".*$target_class_name\ .*;" "$ffile" | grep -v "import" | awk '{print $NF}' | sed 's/;//' | xargs)
+		target_var_name=$(perl -ne '
+			next if /^\s*import/;
+			if (/\b'"$target_class_name"'\b\s+(\w+)\s*(=|;)/) {
+				print $1;
+				exit;
+			}
+			' "$ffile")
+
 		if [[ -z "$target_var_name" ]]; then
 			continue
 		fi
@@ -355,7 +396,14 @@ update_callers() {
 				if [[ "$(basename "$target_file")" == "$(basename "$ffile")" ]] ; then
 					echo "In the same file: $ffile"
 				fi
-				target_var_name=$(grep -E ".*$interface\ .*;" "$ffile" | grep -v "import" | awk '{print $NF}' | sed 's/;//' | xargs)
+				target_var_name=$(perl -ne '
+					next if /^\s*import/;
+					if (/\b'"$interface"'\b\s+(\w+)\s*(=|;)/) {
+						print $1;
+						exit;
+					}
+					' "$ffile")
+
 				if [[ -z "$target_var_name" ]]; then
 					continue
 				fi

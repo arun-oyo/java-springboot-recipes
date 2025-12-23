@@ -254,9 +254,6 @@ find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
     -e 's/import org\.testng\.Assertions;/import org.junit.jupiter.api.Assertions;/g' \
     -e 's/import static org\.testng\.AssertJUnit\./import static org.junit.jupiter.api.Assertions./g' \
     -e 's/import static org\.testng\.Assertions\./import static org.junit.jupiter.api.Assertions./g' \
-    -e 's/import org\.assertj\.core\.api\.Assertions;/import org.junit.jupiter.api.Assertions;/g' \
-    -e 's/import static org\.assertj\.core\.api\.Assertions\.\*/import static org.junit.jupiter.api.Assertions.*;/g' \
-    -e 's/import static org\.assertj\.core\.api\.Assertions\./import static org.junit.jupiter.api.Assertions./g' \
     {} +
 
 # Remove JUnit 3 TestCase and transform static imports
@@ -529,33 +526,6 @@ find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
     -e 's/AssertJUnit\.assertNotSame/Assertions.assertNotSame/g' \
     -e 's/AssertJUnit\.assertArrayEquals/Assertions.assertArrayEquals/g' \
     -e 's/AssertJUnit\.fail/Assertions.fail/g' \
-    {} +
-
-# Convert AssertJ method calls to JUnit 5 assertions
-echo "Converting AssertJ assertions to JUnit 5..."
-find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
-    -e 's/assertThat(\([^)]*\))\.isEqualTo(\([^)]*\))/assertEquals(\2, \1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isNotEqualTo(\([^)]*\))/assertNotEquals(\2, \1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isTrue()/assertTrue(\1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isFalse()/assertFalse(\1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isNull()/assertNull(\1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isNotNull()/assertNotNull(\1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isSameAs(\([^)]*\))/assertSame(\2, \1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isNotSameAs(\([^)]*\))/assertNotSame(\2, \1)/g' \
-    {} +
-
-# Convert complex AssertJ assertions to JUnit 5 with manual review comments
-echo "Converting complex AssertJ assertions to JUnit 5 (manual review needed)..."
-find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
-    -e 's/assertThat(\([^)]*\))\.isEqualToComparingFieldByFieldRecursively(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ field-by-field comparison\n        assertEquals(\2, \1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isEqualToComparingFieldByField(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ field-by-field comparison\n        assertEquals(\2, \1)/g' \
-    -e 's/assertThat(\([^)]*\))\.isEqualToIgnoringCase(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ ignoring case\n        assertEquals(\2.toLowerCase(), \1.toLowerCase())/g' \
-    -e 's/assertThat(\([^)]*\))\.contains(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ contains\n        assertTrue(\1.contains(\2))/g' \
-    -e 's/assertThat(\([^)]*\))\.doesNotContain(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ does not contain\n        assertFalse(\1.contains(\2))/g' \
-    -e 's/assertThat(\([^)]*\))\.hasSize(\([^)]*\))/\/\/ TODO: Manual review - was AssertJ hasSize\n        assertEquals(\2, \1.size())/g' \
-    -e 's/assertThat(\([^)]*\))\.isEmpty()/\/\/ TODO: Manual review - was AssertJ isEmpty\n        assertTrue(\1.isEmpty())/g' \
-    -e 's/assertThat(\([^)]*\))\.isNotEmpty()/\/\/ TODO: Manual review - was AssertJ isNotEmpty\n        assertFalse(\1.isEmpty())/g' \
-    -e 's/Assertions\.assertThat/assertThat/g' \
     {} +
 
 # Additional JUnit 5 migrations

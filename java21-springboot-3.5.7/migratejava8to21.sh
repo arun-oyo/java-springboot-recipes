@@ -47,3 +47,10 @@ echo "Changing repository saveAll calls"
 sh "$SCRIPT_DIR/repositorysavemigration.sh"
 echo "Changed repository saveAll calls"
 ################################## Repository SaveAll Method Migration End ###########################
+
+################################## Kafka Callback Migration ###########################
+echo "Migrating Kafka producer callbacks"
+sh "$SCRIPT_DIR/kafkacallbackmigration.sh"
+echo "Kafka producer callbacks migrated"
+################################## Kafka Callback Migration End ###########################
+echo "Java 8 to 21 migration completed!"
