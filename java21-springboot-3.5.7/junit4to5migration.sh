@@ -319,51 +319,26 @@ find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
     -e '/public static junit\.framework\.Test suite()/d' \
     {} +
 
-# Handle Spring Boot Test transformations - Disable tests with Spring annotations
+# Handle Spring Boot Test transformations
 echo "Processing Spring Boot Test files..."
 find "$TEST_PATH" -type f -name "*.java" | while read -r file; do
     # Check if file has any of the target annotations
     if grep -q -E "@SpringBootTest|@MockBean|@SpyBean" "$file"; then
         echo "Processing file with Spring annotations: $(basename "$file")"
         
-        # Disable the test by commenting out test annotations and add TODO
-        sed -i '' 's/^[[:space:]]*@Test/\/\/ TODO: Re-enable after Spring Boot migration - @Test/g' "$file"
+        # Replace MockBean with MockitoBean
+        sed -i '' 's/@MockBean/@MockitoBean/g' "$file"
         
-        # Comment out Spring Boot Test annotation if present and add TODO
-        sed -i '' 's/^[[:space:]]*@SpringBootTest/\/\/ TODO: Convert to unit test - @SpringBootTest/g' "$file"
+        # Replace SpyBean with MockitoSpyBean
+        sed -i '' 's/@SpyBean/@MockitoSpyBean/g' "$file"
         
-        # Transform Spring annotations to Mockito
-        sed -i '' \
-            -e 's/@Autowired/@InjectMocks/g' \
-            -e 's/@MockBean/@Mock/g' \
-            -e 's/@SpyBean/@Mock/g' \
-            "$file"
+        # Replace old imports with new Spring Boot 3.4+ imports
+        sed -i '' 's/import org\.springframework\.boot\.test\.mock\.mockito\.MockBean;/import org.springframework.test.context.bean.override.mockito.MockitoBean;/g' "$file"
+        sed -i '' 's/import org\.springframework\.boot\.test\.mock\.mockito\.SpyBean;/import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;/g' "$file"
         
-        # Add Mockito imports at line 3 if not already present
-        if ! grep -q "import org.mockito.InjectMocks" "$file"; then
-            sed -i '' '3i\
-import org.mockito.InjectMocks;
-' "$file"
-        fi
-        
-        if ! grep -q "import org.mockito.Mock;" "$file"; then
-            sed -i '' '3i\
-import org.mockito.Mock;
-' "$file"
-        fi
-        
-        # Remove Spring Boot Test imports since they're commented out
-        sed -i '' '/import org\.springframework\.boot\.test\.context\.SpringBootTest;/d' "$file"
-        sed -i '' '/import org\.springframework\.boot\.test\.mock\.mockito\.SpyBean;/d' "$file"
-        sed -i '' '/import org\.springframework\.boot\.test\.mock\.mockito\.MockBean;/d' "$file"
-        sed -i '' '/import org\.springframework\.beans\.factory\.annotation\.Autowired;/d' "$file"
-        
-        echo "  - Disabled tests with TODO comments (// TODO: Re-enable after Spring Boot migration - @Test)"
-        echo "  - Commented out @SpringBootTest with TODO (// TODO: Convert to unit test - @SpringBootTest)"
-        echo "  - Transformed @Autowired → @InjectMocks"
-        echo "  - Transformed @MockBean → @Mock"
-        echo "  - Transformed @SpyBean → @Mock"
-        echo "  - Added Mockito imports"
+        echo "  - Transformed @MockBean → @MockitoBean"
+        echo "  - Transformed @SpyBean → @MockitoSpyBean"
+        echo "  - Updated imports to Spring Boot 3.4+ bean override annotations"
     fi
 done
 
