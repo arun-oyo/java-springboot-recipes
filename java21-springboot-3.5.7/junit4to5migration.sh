@@ -11,7 +11,7 @@ move_assert_args() {
     local METHOD="$1"
     local FILE="$2"
     
-    echo "Processing $METHOD assertion parameter reorder in: $(basename "$FILE")"
+    # echo "Processing $METHOD assertion parameter reorder in: $(basename "$FILE")"
     
     # Create a temporary file
     local TEMP_FILE=$(mktemp)
@@ -228,7 +228,7 @@ move_assert_args() {
     # Replace original file with processed version
     mv "$TEMP_FILE" "$FILE"
     
-    echo "  Completed processing $(basename "$FILE")"
+    # echo "  Completed processing $(basename "$FILE")"
 }
 
 
@@ -666,6 +666,13 @@ grep -rl 'verifyZeroInteractions' "$TEST_PATH" | while read -r file; do
     echo "  Updated verifyZeroInteractions in: $(basename "$file")"
 done
 echo
+
+echo "updating assert4j isEqualToComparingFieldByFieldRecursively to isEqualToComparingFieldByField..."
+grep -rl 'isEqualToComparingFieldByFieldRecursively' "$TEST_PATH" | while read -r file; do
+    sed -i '' 's/isEqualToComparingFieldByFieldRecursively/usingRecursiveComparison().isEqualTo/g' "$file"
+    echo "  Updated isEqualToComparingFieldByFieldRecursively in: $(basename "$file")"
+done
+echo " Update of assertJ recursive field comparison completed!"
 
 echo ""
 echo "JUnit 4 to JUnit 5 migration completed!"

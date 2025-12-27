@@ -571,13 +571,17 @@ echo "Processing $pom_file..."
     update_version_or_add_dependency "pom.xml" "$ns" "org.mockito" "mockito-junit-jupiter" "5.8.0"
 
 # jedis changes
-    update_version "pom.xml" "$ns" "redis-clients" "jedis" "5.2.0"
+    update_version "pom.xml" "$ns" "redis-clients" "jedis" "7.2.0"
 
 # guava cache changes
     update_version "pom.xml" "$ns" "com.google.guava" "guava" "32.1.2-jre"
 
 # common beans utils
     update_version "pom.xml" "$ns" "commons-beanutils" "commons-beanutils" "1.9.4"
+
+# setry changes
+    delete_dependency "pom.xml" "$ns" "com.getsentry.raven" "raven-logback"
+    update_version_or_add_dependency "pom.xml" "$ns" "io.sentry" "sentry-spring-boot-starter-jakarta" "8.23.0"
 
 # oyo dependencies
     update_version "pom.xml" "$ns" "com.oyo.platform" "platform-logger" "0.2.0"

@@ -245,3 +245,12 @@ echo "Replaced deprecated new Boolean() constructors with Boolean.valueOf()"
 grep -rl "import io.micrometer.prometheus.PrometheusMeterRegistry" "$CLASS_PATH" | while read -r file; do
     sed -i '' 's/import springfox.documentation/import io.micrometer.prometheusmetrics.PrometheusMeterRegistry/g' $file
 done
+
+
+grep -rl "import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;" "$CLASS_PATH" | while read -r file; do
+    sed -i '' 's/import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;/import org.springframework.boot.jdbc.DataSourceBuilder;/g' $file
+done
+
+grep -rl "import org.hibernate.validator.constraints.""$CLASS_PATH" | while read -r file; do
+    sed -i '' 's/import org.hibernate.validator.constraints./import jakarta.validation.constraints./g' $file
+done

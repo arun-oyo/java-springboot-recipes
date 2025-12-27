@@ -54,3 +54,16 @@ sh "$SCRIPT_DIR/kafkacallbackmigration.sh"
 echo "Kafka producer callbacks migrated"
 ################################## Kafka Callback Migration End ###########################
 echo "Java 8 to 21 migration completed!"
+
+################################## Mongodb API Migration ###########################
+echo "Migrating MongoDB API usages"
+sh "$SCRIPT_DIR/mongodbapimigration.sh"
+echo "MongoDB API usages migrated"
+################################## Mongodb API Migration End ###########################
+
+
+################################## Resources Migration ###########################
+echo "Migrating resource files"
+sh "$SCRIPT_DIR/resourcesmigration.sh"
+echo "Resource files migrated"
+################################## Resources Migration End ###########################
