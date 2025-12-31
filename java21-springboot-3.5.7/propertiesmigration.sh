@@ -22,6 +22,15 @@ add_property() {
   fi
 }
 
+delete_property() {
+  local property_key=$1
+  local file=$2
+
+  # Delete all lines matching the property key (escaped for sed)
+  local escaped_key=$(echo "$property_key" | sed 's/[.[\*^$()+?{|]/\\&/g')
+  sed -i '' "/^${escaped_key}/d" "$file"
+}
+
 # remove spring.profiles and spring.profiles.active properties
 find "$PROPERTIES_PATH" -type f -name "*.properties" -exec sed -i '' '/spring.profiles.active/d' {} +
 find "$PROPERTIES_PATH" -type f -name "*.properties" -exec sed -i '' '/spring.profiles=/d' {} +
@@ -56,7 +65,7 @@ find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
   sed -i '' 's/org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy/org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl/g' "$file"
   
   sed -i '' 's/javax.persistence.query.timeout/jakarta.persistence.query.timeout/g' "$file"
-  sed -i '' 's/hibernate.temp.use_jdbc_metadata_defaults/hibernate.temp.use_jdbc_metadata_defaults/g' "$file"
+  sed -i '' 's/hibernate.temp.use_jdbc_metadata_defaults/hibernate.boot.allow_jdbc_metadata_access/g' "$file"
 done
 
 # MongoDB UUID representation property
@@ -90,18 +99,27 @@ done
 #   add_property "resilience4j.circuitbreaker.instances.throttler.ignore-exceptions=com.oyorooms.api.throttler.exceptions.AuthenticationFailedException,com.oyorooms.api.throttler.exceptions.AuthServiceException" "$file"
 # done
 
+# Update management.endpoint.*.enabled to management.endpoint.*.access (Spring Boot 3.5)
+echo "Updating management endpoint properties for Spring Boot 3.5..."
+find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
+  sed -i '' 's/management\.endpoint\.\([^.]*\)\.enabled=true/management.endpoint.\1.access=unrestricted/g' "$file"
+  sed -i '' 's/management\.endpoint\.\([^.]*\)\.enabled=false/management.endpoint.\1.access=none/g' "$file"
+done
+echo "Management endpoint properties updated for Spring Boot 3.5"
+
 # Add management and metrics properties if they don't exist
 echo "Adding management and metrics properties..."
 find "$PROPERTIES_PATH" -type f -name "application*.properties" | while read -r file; do
   echo "Checking: $(basename "$file")"
   
-  add_property "management.endpoint.metrics.enabled=true" "$file"
-  add_property "management.endpoints.web.exposure.include=*" "$file"
-  add_property "management.endpoint.prometheus.enabled=true" "$file"
-  add_property "management.metrics.export.prometheus.enabled=true" "$file"
+  delete_property "management.metrics.export.prometheus.enabled" "$file"
+  add_property "management.prometheus.metrics.export.enabled=true" "$file"
   add_property "management.metrics.enable.jvm=true" "$file"
   add_property "server.tomcat.mbeanregistry.enabled=true" "$file"
-  add_property "management.health.circuitbreakers.enabled=true" "$file"
 done
 echo "Management and metrics properties processing completed"
 
+echo "datasource properties migration..."
+find "$PROPERTIES_PATH" -type f -name "*.properties" | while read -r file; do
+  sed -i '' 's/spring.datasource.platform=/spring.sql.init.platform=/g' "$file"
+done

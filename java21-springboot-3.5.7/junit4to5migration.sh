@@ -476,6 +476,7 @@ find "$TEST_PATH" -type f -name "*.java" -exec sed -i '' \
     -e 's/@RunWith(SpringRunner\.class)/@ExtendWith(SpringExtension.class)/g' \
     -e 's/@RunWith(MockitoJUnitRunner\.class)/@ExtendWith(MockitoExtension.class)/g' \
     -e 's/@RunWith(MockitoJUnitRunner\.Silent\.class)/@ExtendWith(MockitoExtension.class)/g' \
+    -e 's/@RunWith(SpringJUnit4ClassRunner\.class)/@ExtendWith(SpringExtension.class)/g' \
     {} +
 
 # Update assertion class names
@@ -537,10 +538,118 @@ find "$TEST_PATH" -type f -name "*.java" | while read -r file; do
     if grep -q "@Test(expected[[:space:]]*=" "$file"; then
         echo "  Converting expected exceptions in: $(basename "$file")"
         
-        # Extract exception class and convert to assertThrows
-        sed -i '' \
-            -e 's/@Test(expected[[:space:]]*=[[:space:]]*\([^)]*\))/\/\/ TODO: Convert to assertThrows(\1, () -> { ... }); then uncomment @Test\n    \/\/ @Test/g' \
-            "$file"
+        # Use awk to properly transform @Test(expected=...) methods with balanced brace checking
+        awk '
+        BEGIN { 
+            in_test_method = 0
+            exception_class = ""
+            method_signature = ""
+            method_body = ""
+            brace_count = 0
+            base_indent = ""
+            body_base_indent = ""
+        }
+        
+        # Match @Test(expected=ExceptionClass.class)
+        /@Test\(expected[[:space:]]*=/ {
+            # Extract exception class name
+            line = $0
+            gsub(/.*expected[[:space:]]*=[[:space:]]*/, "", line)
+            gsub(/\.class.*/, "", line)
+            exception_class = line
+            in_test_method = 1
+            # Get indentation
+            match($0, /^[[:space:]]*/)
+            base_indent = substr($0, 1, RLENGTH)
+            body_base_indent = base_indent "        "
+            # Print @Test without expected parameter
+            print base_indent "@Test"
+            next
+        }
+        
+        # Capture method signature (may or may not have opening brace on same line)
+        in_test_method == 1 && /public/ {
+            method_signature = $0
+            # Check if opening brace is on same line
+            if (index(method_signature, "{") > 0) {
+                # Remove the opening brace from signature
+                sub(/[[:space:]]*\{.*$/, "", method_signature)
+                # Start counting braces from 1
+                brace_count = 1
+            } else {
+                # Opening brace is on next line
+                brace_count = 0
+            }
+            in_test_method = 2
+            method_body = ""
+            next
+        }
+        
+        # Process method body
+        in_test_method == 2 {
+            # If brace_count is 0, we need to find the opening brace first
+            if (brace_count == 0) {
+                if (index($0, "{") > 0) {
+                    brace_count = 1
+                    next
+                }
+            } else {
+                # Count braces on this line
+                for (i = 1; i <= length($0); i++) {
+                    char = substr($0, i, 1)
+                    if (char == "{") {
+                        brace_count++
+                    }
+                    if (char == "}") {
+                        brace_count--
+                        # If we hit zero, this is the closing brace of the method
+                        if (brace_count == 0) {
+                            # Print the complete transformed method
+                            print method_signature " {"
+                            print base_indent "    assertThrows(" exception_class ".class, () -> {"
+                            if (method_body != "") {
+                                # Add extra indentation to each line of the body
+                                split(method_body, lines, "\n")
+                                for (j = 1; j <= length(lines); j++) {
+                                    if (lines[j] != "") {
+                                        print body_base_indent lines[j]
+                                    }
+                                }
+                            }
+                            print base_indent "    });"
+                            print base_indent "}"
+                            
+                            # Reset state
+                            in_test_method = 0
+                            exception_class = ""
+                            method_signature = ""
+                            method_body = ""
+                            next
+                        }
+                    }
+                }
+                
+                # Accumulate method body (all lines between opening and closing brace)
+                # Strip the original indentation to re-apply it later
+                if (brace_count > 0) {
+                    # Remove base indentation from the line
+                    line_content = $0
+                    gsub(/^[[:space:]]*/, "", line_content)
+                    if (method_body == "") {
+                        method_body = line_content
+                    } else {
+                        method_body = method_body "\n" line_content
+                    }
+                }
+                next
+            }
+        }
+        
+        # Print all other lines as-is
+        {
+            print $0
+        }
+        ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
         
         # Add assertThrows import if not present
         if ! grep -q "import static org.junit.jupiter.api.Assertions.assertThrows" "$file"; then

@@ -315,7 +315,7 @@ echo "Processing $pom_file..."
             echo "going to update spring cloud"
             xmlstarlet ed --inplace \
                 -N x="$ns" \
-                -u "//x:project/x:dependencyManagement/x:dependencies/x:dependency[x:groupId='org.springframework.cloud' and x:artifactId='spring-cloud-dependencies']/x:version" -v "2023.0.3" \
+                -u "//x:project/x:dependencyManagement/x:dependencies/x:dependency[x:groupId='org.springframework.cloud' and x:artifactId='spring-cloud-dependencies']/x:version" -v "2025.0.1" \
                 "$pom_file"
         else
             xmlstarlet ed --inplace \
@@ -326,7 +326,7 @@ echo "Processing $pom_file..."
                 -N x="$ns" \
                 -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "groupId" -v "org.springframework.cloud" \
                 -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "artifactId" -v "spring-cloud-dependencies" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "version" -v "2023.0.3" \
+                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "version" -v "2025.0.1" \
                 -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "type" -v "pom" \
                 -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "scope" -v "import" \
                 "$pom_file"
@@ -385,17 +385,12 @@ echo "Processing $pom_file..."
 
 
 # starter velocity changes
-    xmlstarlet ed --inplace \
-        -N x="$ns" \
-        -d "//x:project/x:dependencies/x:dependency[x:groupId='org.springframework.boot' and x:artifactId='spring-boot-starter-velocity']" \
-        "$pom_file"
+    delete_dependency "pom.xml" "$ns" "org.springframework.boot" "spring-boot-starter-velocity"
 
 
 # apache velocity changes
-    xmlstarlet ed --inplace \
-        -N x="$ns" \
-        -d "//x:project/x:dependencies/x:dependency[x:groupId='org.apache.velocity' and x:artifactId='velocity']" \
-        "$pom_file"
+    delete_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity"
+    update_version_or_add_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity-engine-core" "2.4.1"
 
 
 # swagger changes
@@ -462,7 +457,7 @@ echo "Processing $pom_file..."
 
 # apache commons-lang changes
     update_artifact "pom.xml" "$ns" "org.apache.commons" "commons-lang" "org.apache.commons" "commons-lang3"
-    update_version "pom.xml" "$ns" "org.apache.commons" "commons-lang3" "3.12.0"
+    update_version "pom.xml" "$ns" "org.apache.commons" "commons-lang3" "3.18.0"
 
 # micrometer changes
     xmlstarlet ed --inplace \
@@ -580,8 +575,21 @@ echo "Processing $pom_file..."
     update_version "pom.xml" "$ns" "commons-beanutils" "commons-beanutils" "1.9.4"
 
 # setry changes
-    delete_dependency "pom.xml" "$ns" "com.getsentry.raven" "raven-logback"
-    update_version_or_add_dependency "pom.xml" "$ns" "io.sentry" "sentry-spring-boot-starter-jakarta" "8.23.0"
+    update_artifact "pom.xml" "$ns" "com.getsentry.raven" "raven-logback" "io.sentry" "sentry-spring-boot-starter-jakarta"
+    update_version "pom.xml" "$ns" "io.sentry" "sentry-spring-boot-starter-jakarta" "8.23.0"
+
+# aspectj weaver changes
+    delete_version "pom.xml" "$ns" "org.aspectj" "aspectjweaver"
+
+# h2database changes
+    delete_version "pom.xml" "$ns" "com.h2database" "h2"
+
+# com.google.code.gson changes
+    delete_version "pom.xml" "$ns" "com.google.code.gson" "gson"
+
+# quartz changes
+    delete_version "pom.xml" "$ns" "org.quartz-scheduler" "quartz"
+    delete_version "pom.xml" "$ns" "org.quartz-scheduler" "quartz-jobs"
 
 # oyo dependencies
     update_version "pom.xml" "$ns" "com.oyo.platform" "platform-logger" "0.2.0"

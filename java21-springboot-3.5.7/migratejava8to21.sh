@@ -67,3 +67,10 @@ echo "Migrating resource files"
 sh "$SCRIPT_DIR/resourcesmigration.sh"
 echo "Resource files migrated"
 ################################## Resources Migration End ###########################
+
+
+################################## @Serial Annotation Migration ###########################
+echo "Adding @Serial annotations"
+sh "$SCRIPT_DIR/serialmigration.sh"
+echo "@Serial annotations added"
+################################## @Serial Annotation Migration End ###########################

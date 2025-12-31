@@ -176,3 +176,45 @@ Upgraded:
 '''
 
 9. Update HttpStatus arg to HttpStatusCode for overridden method in extended class ResponseEntityExceptionHandler
+
+10. Update quartz properties
+'''
+spring.quartz.job-store-type=jdbc
+spring.quartz.auto-startup=true
+spring.quartz.jdbc.initialize-schema=never
+
+# ==================================================
+# QUARTZ SCHEDULER PROPERTIES
+# (Mapped from org.quartz.scheduler.*)
+# ==================================================
+spring.quartz.properties.org.quartz.scheduler.instanceName=PropScheduler
+spring.quartz.properties.org.quartz.scheduler.instanceId=10
+
+# Optional (you had both names, keeping latest)
+spring.quartz.properties.org.quartz.scheduler.name=ipms-schedulers
+
+# ==================================================
+# QUARTZ THREAD POOL
+# ==================================================
+spring.quartz.properties.org.quartz.threadPool.class=org.quartz.simpl.SimpleThreadPool
+spring.quartz.properties.org.quartz.threadPool.threadCount=20
+# ==================================================
+# QUARTZ JOB STORE (JDBC + CLUSTERED)
+# ==================================================
+spring.quartz.properties.org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX
+spring.quartz.properties.org.quartz.jobStore.driverDelegateClass=org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+spring.quartz.properties.org.quartz.jobStore.useProperties=false
+spring.quartz.properties.org.quartz.jobStore.isClustered=true
+spring.quartz.properties.org.quartz.jobStore.clusterCheckinInterval=5000
+spring.quartz.properties.org.quartz.jobStore.tablePrefix=QRTZ_
+
+spring.quartz.properties.org.quartz.jobStore.dataSource=myDS
+
+# ==================================================
+spring.quartz.properties.org.quartz.dataSource.myDS.driver=org.postgresql.Driver
+spring.quartz.properties.org.quartz.dataSource.myDS.URL=jdbc:postgresql://localhost:5432/postgres?stringtype=unspecified&sslmode=disable
+spring.quartz.properties.org.quartz.dataSource.myDS.user=arun.kumar
+spring.quartz.properties.org.quartz.dataSource.myDS.password=
+spring.quartz.properties.org.quartz.dataSource.myDS.maxConnections=7
+spring.quartz.properties.org.quartz.dataSource.myDS.validationQuery=select 1
+'''
