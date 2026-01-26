@@ -70,20 +70,21 @@ resilience4j.thread-pool-bulkhead.configs.default.contextPropagators={classpath}
 
 5. RestTemplate configuration changes:
 '''
-    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-    connectionManager.setDefaultMaxPerRoute(poolCount);
-    connectionManager.setMaxTotal(poolCount);
+    PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+                .setDefaultConnectionConfig(ConnectionConfig.custom()
+                        .setConnectTimeout(Timeout.ofMilliseconds(connectionTimeout))
+                        .setSocketTimeout(Timeout.ofMilliseconds(readTimeout))
+                        .build())
+                .setMaxConnTotal(noOfConnections)
+                .setMaxConnPerRoute(noOfConnections)
+                .build();
+    
 
     CloseableHttpClient httpClient = HttpClients.custom()
             .setConnectionManager(connectionManager)
-            .setDefaultRequestConfig(RequestConfig.custom()
-                    .setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-                    .setResponseTimeout(readTimeout, TimeUnit.MILLISECONDS)
-                    .build())
             .build();
 
     HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
-    requestFactory.setConnectTimeout(connectTimeout);
     requestFactory.setConnectionRequestTimeout(connectionTimeout);
 '''
 
@@ -218,3 +219,50 @@ spring.quartz.properties.org.quartz.dataSource.myDS.password=
 spring.quartz.properties.org.quartz.dataSource.myDS.maxConnections=7
 spring.quartz.properties.org.quartz.dataSource.myDS.validationQuery=select 1
 '''
+
+11. AWS sdk from v1 to v2 migration
+After project is successfully build.
+
+Ues the recipe below and run mvn rewrite:run
+
+'''
+<project>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.openrewrite.maven</groupId>
+        <artifactId>rewrite-maven-plugin</artifactId>
+        <version>6.28.0</version>
+        <configuration>
+          <exportDatatables>true</exportDatatables>
+          <activeRecipes>
+            <recipe>software.amazon.awssdk.v2migration.AwsSdkJavaV1ToV2</recipe>
+          </activeRecipes>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-third-party</artifactId>
+            <version>0.34.0</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+'''
+
+mvn rewrite:run
+
+and then update aws sdk dependency:
+
+'''
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>s3</artifactId>
+    <version>2.31.78</version>
+</dependency>
+'''
+
+
+

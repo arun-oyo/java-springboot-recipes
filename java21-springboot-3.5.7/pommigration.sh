@@ -143,7 +143,7 @@ echo "Processing $pom_file..."
             -N x="$ns" \
             -s "//x:project/x:build/x:plugins/x:plugin[last()]" -t elem -n "groupId" -v "org.apache.maven.plugins" \
             -s "//x:project/x:build/x:plugins/x:plugin[last()]" -t elem -n "artifactId" -v "maven-compiler-plugin" \
-            -s "//x:project/x:build/x:plugins/x:plugin[last()]" -t elem -n "version" -v "3.13.0" \
+            -s "//x:project/x:build/x:plugins/x:plugin[last()]" -t elem -n "version" -v "3.14.1" \
             "$pom_file"
 
         xmlstarlet ed --inplace \
@@ -256,7 +256,7 @@ echo "Processing $pom_file..."
         if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-surefire-plugin']" "$pom_file" >/dev/null; then
             xmlstarlet ed --inplace \
                 -N x="$ns" \
-                -u "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-surefire-plugin']/x:version" -v "3.5.0" \
+                -u "//x:project/x:build/x:plugins/x:plugin[x:artifactId='maven-surefire-plugin']/x:version" -v "3.5.4" \
                 "$pom_file"
         else
             xmlstarlet ed --inplace \
@@ -278,36 +278,36 @@ echo "Processing $pom_file..."
 # DependencyManagement Changes
 
     # update or add springboot dependencies
-    if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:parent[x:artifactId='spring-boot-starter-parent']/x:version" "$pom_file" >/dev/null; then
-        if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement/x:dependencies/x:dependency[x:groupId='org.springframework.boot' and x:artifactId='spring-boot-dependencies']" "$pom_file" >/dev/null; then
-            if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement" "$pom_file" >/dev/null; then
-                xmlstarlet ed --inplace \
-                    -N x="$ns" \
-                    -s "//x:project" -t elem -n "dependencyManagement" -v "" \
-                    "$pom_file"
-            fi
-            if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement/x:dependencies" "$pom_file" >/dev/null; then
-                xmlstarlet ed --inplace \
-                    -N x="$ns" \
-                    -s "//x:project/x:dependencyManagement" -t elem -n "dependencies" -v "" \
-                    "$pom_file"
-            fi
+    # if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:parent[x:artifactId='spring-boot-starter-parent']/x:version" "$pom_file" >/dev/null; then
+    #     if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement/x:dependencies/x:dependency[x:groupId='org.springframework.boot' and x:artifactId='spring-boot-dependencies']" "$pom_file" >/dev/null; then
+    #         if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement" "$pom_file" >/dev/null; then
+    #             xmlstarlet ed --inplace \
+    #                 -N x="$ns" \
+    #                 -s "//x:project" -t elem -n "dependencyManagement" -v "" \
+    #                 "$pom_file"
+    #         fi
+    #         if ! xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencyManagement/x:dependencies" "$pom_file" >/dev/null; then
+    #             xmlstarlet ed --inplace \
+    #                 -N x="$ns" \
+    #                 -s "//x:project/x:dependencyManagement" -t elem -n "dependencies" -v "" \
+    #                 "$pom_file"
+    #         fi
 
-            xmlstarlet ed --inplace \
-                -N x="$ns" \
-                -s "//x:project/x:dependencyManagement/x:dependencies" -t elem -n "dependency" -v "" \
-                "$pom_file"
+    #         xmlstarlet ed --inplace \
+    #             -N x="$ns" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies" -t elem -n "dependency" -v "" \
+    #             "$pom_file"
 
-            xmlstarlet ed --inplace \
-                -N x="$ns" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "groupId" -v "org.springframework.boot" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "artifactId" -v "spring-boot-dependencies" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "version" -v "$SPRING_BOOT_VERSION" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "type" -v "pom" \
-                -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "scope" -v "import" \
-                "$pom_file"
-        fi
-    fi
+    #         xmlstarlet ed --inplace \
+    #             -N x="$ns" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "groupId" -v "org.springframework.boot" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "artifactId" -v "spring-boot-dependencies" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "version" -v "$SPRING_BOOT_VERSION" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "type" -v "pom" \
+    #             -s "//x:project/x:dependencyManagement/x:dependencies/x:dependency[last()]" -t elem -n "scope" -v "import" \
+    #             "$pom_file"
+    #     fi
+    # fi
 
     # update spring cloud version
     if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[contains(x:artifactId, 'hystrix')]" "$pom_file" >/dev/null; then
@@ -389,8 +389,10 @@ echo "Processing $pom_file..."
 
 
 # apache velocity changes
-    delete_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity"
-    update_version_or_add_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity-engine-core" "2.4.1"
+    if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='org.apache.velocity' and x:artifactId='velocity']" "$pom_file" >/dev/null; then
+        delete_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity"
+        update_version_or_add_dependency "pom.xml" "$ns" "org.apache.velocity" "velocity-engine-core" "2.4.1"
+    fi
 
 
 # swagger changes
@@ -415,7 +417,7 @@ echo "Processing $pom_file..."
     fi
 
 # caffeine changes
-    update_version "pom.xml" "$ns" "com.github.ben-manes.caffeine" "caffeine" "3.2.3"
+    delete_version "pom.xml" "$ns" "com.github.ben-manes.caffeine" "caffeine"
 
 
 # httpclient changes
@@ -466,7 +468,7 @@ echo "Processing $pom_file..."
         "$pom_file"
     
     update_artifact "pom.xml" "$ns" "io.micrometer" "micrometer-spring-legacy" "io.micrometer" "micrometer-core"
-    update_version "pom.xml" "$ns" "io.micrometer" "micrometer-core" "1.10.2"
+    delete_version "pom.xml" "$ns" "io.micrometer" "micrometer-core"
 
 
 # netflix hystrix changes
@@ -575,8 +577,11 @@ echo "Processing $pom_file..."
     update_version "pom.xml" "$ns" "commons-beanutils" "commons-beanutils" "1.9.4"
 
 # setry changes
-    update_artifact "pom.xml" "$ns" "com.getsentry.raven" "raven-logback" "io.sentry" "sentry-spring-boot-starter-jakarta"
-    update_version "pom.xml" "$ns" "io.sentry" "sentry-spring-boot-starter-jakarta" "8.23.0"
+    if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='com.getsentry.raven' and x:artifactId='raven-logback']" "$pom_file" >/dev/null; then
+        update_artifact "pom.xml" "$ns" "com.getsentry.raven" "raven-logback" "io.sentry" "sentry-spring-boot-starter-jakarta"
+        update_version_or_add_dependency "pom.xml" "$ns" "io.sentry" "sentry-spring-boot-starter-jakarta" "8.23.0"
+        update_version_or_add_dependency "pom.xml" "$ns" "io.sentry" "sentry-logback" "8.23.0"
+    fi
 
 # aspectj weaver changes
     delete_version "pom.xml" "$ns" "org.aspectj" "aspectjweaver"
@@ -591,11 +596,22 @@ echo "Processing $pom_file..."
     delete_version "pom.xml" "$ns" "org.quartz-scheduler" "quartz"
     delete_version "pom.xml" "$ns" "org.quartz-scheduler" "quartz-jobs"
 
+# projectreactor changes
+    delete_version "poms.xml" "$ns" "io.projectreactor" "reactor-core"
+
+# aws s3 sdk changes
+    if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='com.amazonaws' and x:artifactId='aws-java-sdk']" "$pom_file" >/dev/null; then
+        delete_dependency "pom.xml" "$ns" "com.amazonaws" "aws-java-sdk"
+        update_version_or_add_dependency "pom.xml" "$ns" "software.amazon.awssdk" "s3" "2.35.10"
+    fi
+
+
 # oyo dependencies
     update_version "pom.xml" "$ns" "com.oyo.platform" "platform-logger" "0.2.0"
     update_version "pom.xml" "$ns" "com.oyo.platform" "pdf-sdk" "0.1.0"
     update_version "pom.xml" "$ns" "com.oyo.platform" "platform-service-discovery" "0.1.0"
     update_version "pom.xml" "$ns" "com.oyo.platform" "platform-encryption" "0.2.0"
+    update_version "pom.xml" "$ns" "com.oyo" "tenant-sdk-simple" "1.0.0"
 
     if xmlstarlet sel -N x="$ns" -t -c "//x:project/x:dependencies/x:dependency[x:groupId='com.oyo.platform' and x:artifactId='platform-config-service']" "$pom_file" >/dev/null; then
         delete_dependency "pom.xml" "$ns" "com.oyo.platform" "platform-config-service"

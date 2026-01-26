@@ -10,6 +10,7 @@ TEST_PATH="./src/test/java"
 move_assert_args() {
     local METHOD="$1"
     local FILE="$2"
+    local TOTAL_ARGS_SHOULD_BE="$3"
     
     # echo "Processing $METHOD assertion parameter reorder in: $(basename "$FILE")"
     
@@ -92,10 +93,10 @@ move_assert_args() {
                         }
                         
                         # Apply JUnit 4 to 5 reordering rules
-                        if (param_count == 2) {
+                        if (param_count == 2 && TOTAL_ARGS_SHOULD_BE == 2) {
                             new_args = params[2] ", " params[1]
                         }
-                        else if (param_count == 3) {
+                        else if (param_count == 3 && TOTAL_ARGS_SHOULD_BE == 3) {
                             new_args = params[2] ", " params[3] ", " params[1]  
                         }
                         else {
@@ -190,10 +191,10 @@ move_assert_args() {
                     }
                     
                     # Apply JUnit 4 to 5 reordering rules
-                    if (param_count == 2) {
+                    if (param_count == 2 && TOTAL_ARGS_SHOULD_BE == 2) {
                         new_args = params[2] ", " params[1]
                     }
-                    else if (param_count == 3) {
+                    else if (param_count == 3 && TOTAL_ARGS_SHOULD_BE == 3) {
                         new_args = params[2] ", " params[3] ", " params[1]  
                     }
                     else {
@@ -752,20 +753,19 @@ find "$TEST_PATH" -type f -name "*.java" | while read -r file; do
   # --- 2-arg assertions ---
   # JUnit 4: (message, condition/value)
   # JUnit 5: (condition/value, message)
-  move_assert_args assertTrue      "$file"
-  move_assert_args assertFalse     "$file"
-  move_assert_args assertNull      "$file"
-  move_assert_args assertNotNull   "$file"
+  move_assert_args assertTrue "$file" 2
+  move_assert_args assertFalse "$file" 2
+  move_assert_args assertNull "$file" 2
+  move_assert_args assertNotNull "$file" 2
 
   # --- 3-arg assertions ---
   # JUnit 4: (message, actual, expected)
   # JUnit 5: (expected, actual, message)
-  move_assert_args assertEquals        "$file"
-  move_assert_args assertNotEquals     "$file"
-  move_assert_args assertSame          "$file"
-  move_assert_args assertNotSame       "$file"
-  move_assert_args assertArrayEquals   "$file"
-
+  move_assert_args assertEquals "$file" 3
+  move_assert_args assertNotEquals "$file" 3
+  move_assert_args assertSame "$file" 3
+  move_assert_args assertNotSame "$file" 3
+  move_assert_args assertArrayEquals "$file" 3
 done
 echo "JUnit assertion parameter reordering completed!"
 
